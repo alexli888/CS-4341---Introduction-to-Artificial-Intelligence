@@ -1,2 +1,1 @@
-print("Hello, World!")
-print("is this working????")
+print("hurry up and fix yourself!")
