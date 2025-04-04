@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 '''Write your code here '''
-df = pd.read_csv("your path of Life Expectancy Data.csv")
+df = pd.read_csv("/Users/alexli/Library/CloudStorage/OneDrive-WorcesterPolytechnicInstitute(wpi.edu)/CS 4341 Introduction to Artificial Intelligence/CS-4341---Introduction-to-Artificial-Intelligence/Project 2/Life Expectancy Data.csv")
 
 '''end of student code'''
 from sklearn.linear_model import LinearRegression
