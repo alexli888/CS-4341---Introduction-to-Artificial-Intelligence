@@ -1,31 +1,74 @@
 import pandas as pd
 import numpy as np
-'''Write your code here '''
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load dataset using the same path as before
 df = pd.read_csv("/Users/alexli/Library/CloudStorage/OneDrive-WorcesterPolytechnicInstitute(wpi.edu)/CS 4341 Introduction to Artificial Intelligence/CS-4341---Introduction-to-Artificial-Intelligence/Project 2/Life Expectancy Data.csv")
 
-'''end of student code'''
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-total_df = df[['Year', 'GDP', 'Life expectancy ', 'Status', 'Country']]
-total_df = total_df.dropna()
+# Keep relevant columns and drop missing values
+df = df[['Year', 'GDP', 'Life expectancy ', 'Status', 'Country']].dropna()
 
+results = {
+    "Developing": {1: [], 2: [], 3: [], 4: []},
+    "Developed": {1: [], 2: [], 3: [], 4: []}
+}
+
+# Loop through each country & degree
+for country in df['Country'].unique():
+    country_df = df[df['Country'] == country]
+    status = country_df['Status'].iloc[0]
+
+    for degree in [1, 2, 3, 4]:
+        # Split into train/test sets
+        train_df = country_df[country_df['Year'] <= 2013]  # Training data: 2000-2013
+        test_df = country_df[country_df['Year'] >= 2014]   # Testing data: 2014-2015
+
+        # Skip if not enough data
+        if len(train_df) < degree + 1 or len(test_df) == 0:
+            continue
+
+        train_X = train_df[['GDP']].values
+        train_y = train_df['Life expectancy '].values
+        test_X = test_df[['GDP']].values
+        test_y = test_df['Life expectancy '].values
+
+        # Polynomial transformation
+        poly = PolynomialFeatures(degree=degree)
+        train_X_poly = poly.fit_transform(train_X)
+        test_X_poly = poly.transform(test_X)
+
+        # Train model
+        model = LinearRegression()
+        model.fit(train_X_poly, train_y)
+
+        # Predictions
+        train_preds = model.predict(train_X_poly)
+        test_preds = model.predict(test_X_poly)
+
+        # Metrics calculation with check for NaN R2
+        train_rmse = np.sqrt(mean_squared_error(train_y, train_preds))
+        train_r2 = r2_score(train_y, train_preds) if len(train_y) > 1 else np.nan  # Handle R2 with less than 2 samples
+        test_rmse = np.sqrt(mean_squared_error(test_y, test_preds))
+        test_r2 = r2_score(test_y, test_preds) if len(test_y) > 1 else np.nan  # Handle R2 with less than 2 samples
+
+        # Append results only if R2 is valid 
+        if not np.isnan(train_r2) and not np.isnan(test_r2):
+            results[status][degree].append((train_rmse, train_r2, test_rmse, test_r2))
+
+# Print the average metrics
+print("\n")
+print(f"{'Status':<12} {'Degree':<7} {'Train RMSE':<12} {'Train R2':<10} {'Test RMSE':<12} {'Test R2'}")
+print("-" * 65)
 for status in ["Developing", "Developed"]:
-    for degree in [1,2,3,4]:
-        #Step 1:You should define the train_x, each row of it represents a year of GDP of a country,
-        #and each column of it represents a power of the GDP. The Year column should be used to select the samples.
-        #Step 2:Define train_y, each row of it represents a year of Life expectancy of a country. The Year column should be used to select the samples.
-        #Step 3:Define a LinearRegression model, and fit it using train_X and train_y.
-        #Step 4:Calculate rmse and r2_score using the fitted model.
-        '''Write your code here '''
-    
-    
-        '''end of student code'''        
-        print(f'Status = {status}, Training data, degree={degree}, RMSE={rmse:.3f}, R2={r2_score:.3f}')
-        #Step 1: Define test_x and test_y by selecting the remaining years of the data
-        #Step 2: Use model.predict to generate the prediction
-        #Step 3: Calculate rmse and r2_score on test_x and test_y.
-        '''Write your code here '''
-    
-    
-        '''end of student code'''
-        print(f'Status = {status}, Testing data, degree={degree}, RMSE={rmse:.3f}, R2={r2_score:.3f}')
+    for degree in [1, 2, 3, 4]:
+        metrics = results[status][degree]
+        if metrics:
+            avg_train_rmse = np.mean([m[0] for m in metrics])
+            avg_train_r2 = np.mean([m[1] for m in metrics])
+            avg_test_rmse = np.mean([m[2] for m in metrics])
+            avg_test_r2 = np.mean([m[3] for m in metrics])
+            print(f"{status:<12} {degree:<7} {avg_train_rmse:<12.3f} {avg_train_r2:<10.3f} {avg_test_rmse:<12.3f} {avg_test_r2:.3f}")
+        else:
+            print(f"{status:<12} {degree:<7} {'N/A':<12} {'N/A':<10} {'N/A':<12} {'N/A'}")
