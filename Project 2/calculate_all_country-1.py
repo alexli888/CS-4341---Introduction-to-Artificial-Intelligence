@@ -4,10 +4,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
 
-# Load dataset using the same path as before
+# Loading dataset........
 df = pd.read_csv("/Users/alexli/Library/CloudStorage/OneDrive-WorcesterPolytechnicInstitute(wpi.edu)/CS 4341 Introduction to Artificial Intelligence/CS-4341---Introduction-to-Artificial-Intelligence/Project 2/Life Expectancy Data.csv")
 
-# Keep relevant columns and drop missing values
 df = df[['Year', 'GDP', 'Life expectancy ', 'Status', 'Country']].dropna()
 
 results = {
@@ -15,17 +14,17 @@ results = {
     "Developed": {1: [], 2: [], 3: [], 4: []}
 }
 
-# Loop through each country & degree
+# Iterate through each country in the dataset(AS its all country)
 for country in df['Country'].unique():
     country_df = df[df['Country'] == country]
     status = country_df['Status'].iloc[0]
 
     for degree in [1, 2, 3, 4]:
-        # Split into train/test sets
+        # SPLIT into train/test sets
         train_df = country_df[country_df['Year'] <= 2013]  # Training data: 2000-2013
         test_df = country_df[country_df['Year'] >= 2014]   # Testing data: 2014-2015
 
-        # Skip if not enough data
+        # Skip if not enough data points
         if len(train_df) < degree + 1 or len(test_df) == 0:
             continue
 
@@ -34,30 +33,28 @@ for country in df['Country'].unique():
         test_X = test_df[['GDP']].values
         test_y = test_df['Life expectancy '].values
 
-        # Polynomial transformation
         poly = PolynomialFeatures(degree=degree)
         train_X_poly = poly.fit_transform(train_X)
         test_X_poly = poly.transform(test_X)
 
-        # Train model
         model = LinearRegression()
         model.fit(train_X_poly, train_y)
 
-        # Predictions
         train_preds = model.predict(train_X_poly)
         test_preds = model.predict(test_X_poly)
 
-        # Metrics calculation with check for NaN R2
+        # Metrics calculation w/ nan check
         train_rmse = np.sqrt(mean_squared_error(train_y, train_preds))
-        train_r2 = r2_score(train_y, train_preds) if len(train_y) > 1 else np.nan  # Handle R2 with less than 2 samples
+        train_r2 = r2_score(train_y, train_preds) if len(train_y) > 1 else np.nan  
         test_rmse = np.sqrt(mean_squared_error(test_y, test_preds))
-        test_r2 = r2_score(test_y, test_preds) if len(test_y) > 1 else np.nan  # Handle R2 with less than 2 samples
+        test_r2 = r2_score(test_y, test_preds) if len(test_y) > 1 else np.nan 
 
         # Append results only if R2 is valid 
         if not np.isnan(train_r2) and not np.isnan(test_r2):
             results[status][degree].append((train_rmse, train_r2, test_rmse, test_r2))
 
-# Print the average metrics
+
+
 print("\n")
 print(f"{'Status':<12} {'Degree':<7} {'Train RMSE':<12} {'Train R2':<10} {'Test RMSE':<12} {'Test R2'}")
 print("-" * 65)

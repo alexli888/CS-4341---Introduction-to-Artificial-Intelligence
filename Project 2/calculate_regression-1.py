@@ -8,11 +8,9 @@ from sklearn.preprocessing import StandardScaler
 df = pd.read_csv("/Users/alexli/Library/CloudStorage/OneDrive-WorcesterPolytechnicInstitute(wpi.edu)/CS 4341 Introduction to Artificial Intelligence/CS-4341---Introduction-to-Artificial-Intelligence/Project 2/Life Expectancy Data.csv")
 '''end of student code'''
 
-# Filter and clean the dataset
 total_df = df[['Year', 'GDP', 'Adult Mortality', 'Alcohol', ' BMI ', 'Schooling', 'Life expectancy ', 'Status', 'Country']]
 total_df = total_df.dropna()
 
-# Features to use
 features = ['GDP', 'Adult Mortality', 'Alcohol', ' BMI ', 'Schooling']
 
 for status in ["Developing", "Developed"]:
@@ -30,7 +28,6 @@ for status in ["Developing", "Developed"]:
     train_X = train_df[features]
     train_y = train_df['Life expectancy ']
 
-    # Standardize features to avoid issues like overflow or division by zero
     scaler = StandardScaler()
     train_X_scaled = scaler.fit_transform(train_X)
 
@@ -63,7 +60,7 @@ for status in ["Developing", "Developed"]:
     '''end of student code'''
     print(f'Status = {status}, Testing data, RMSE={rmse:.3f}, R2={r2_score_test:.3f}')
 
-    # THIS REG MODEL IS MEANT TO predict Libya life expectancy in 2010.
+    # THIS REG MODEL IS MEANT TO predict Libya life expectancy in 2010, as said in class.
     libya_df = total_df[(total_df['Country'] == 'Libya') & (total_df['Year'] == 2010)]
     if not libya_df.empty:
         libya_X = libya_df[features]
